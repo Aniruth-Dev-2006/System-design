@@ -115,10 +115,16 @@ export async function POST(req) {
 
     let problemContextStr = "The user has not been assigned a specific problem yet."
     if (interviewContext && interviewContext.problem) {
-      problemContextStr = `The candidate has been assigned the following problem based on their ${interviewContext.level} level of experience:
+      const pDesc = (interviewContext.problem.description || '').trim()
+      if (!pDesc || pDesc === 'Design a scalable system based on the interviewer prompts.') {
+         problemContextStr = `The candidate needs to be tested at a ${interviewContext.level} level of experience.
+Because no specific problem was assigned, YOU MUST INVENT a specific, classic system design question (e.g., "Design Twitter", "Design a URL Shortener", "Design a Distributed Rate Limiter") appropriate for a ${interviewContext.level} engineer, and explicitly ask them this question in your very first message.`
+      } else {
+        problemContextStr = `The candidate has been assigned the following problem based on their ${interviewContext.level} level of experience:
 Title: ${interviewContext.problem.title}
-Description: ${interviewContext.problem.description}
+Description: ${pDesc}
 Constraints to focus on: ${interviewContext.problem.constraints}`
+      }
     }
 
     // Build the system prompt
@@ -133,14 +139,15 @@ The candidate may use standard Excalidraw shapes (rectangles, ellipses, diamonds
 
 Follow this structured interview format. You must drive the conversation through these specific stages:
 1. **Welcome & Requirements Gathering**: If this is the very first message, greet the candidate, introduce yourself as Xona, and state the assigned problem from the [Interview Context]. DO NOT state any scale or constraints upfront. Instead, wait for the candidate to ask clarifying questions. **CRITICAL: When the candidate asks a clarifying question (e.g., about file size, scale, latency), YOU MUST INVENT AND PROVIDE REALISTIC NUMBERS/ANSWERS for them to use (e.g., "Assume a maximum size of 10MB per paste" or "Assume 1 million DAU"). Do not just acknowledge their question without answering it!**
-2. **Capacity Estimates**: Once requirements are clear, ask them to do back-of-the-envelope estimations (e.g., QPS, storage, bandwidth).
-3. **High-Level Design**: Ask them to draw the core components on the Excalidraw whiteboard. Evaluate their initial architecture and data flow.
-4. **Deep Dives**: Drill into specific components (e.g., database schema, consistency vs availability, specific algorithms like Token Bucket).
-5. **Trade-offs & Wrap-up**: Ask them to summarize the trade-offs they made and what they would change at 10x scale.
+2. **Custom Scenario & Level Assessment**: You MUST tailor your questions strictly to the "Description" provided in the [Interview Context]. Ensure that the complexity of your follow-ups matches their assigned level of experience. For a Junior (Easy) level, ask fundamental questions. For a Senior (Hard) level, ask deep architectural questions about consensus, partitions, and bottlenecks.
+3. **Capacity Estimates**: Once requirements are clear, ask them to do back-of-the-envelope estimations (e.g., QPS, storage, bandwidth).
+4. **High-Level Design**: Ask them to draw the core components on the Excalidraw whiteboard. Evaluate their initial architecture and data flow.
+5. **Deep Dives**: Drill into specific components (e.g., database schema, consistency vs availability, specific algorithms like Token Bucket).
+6. **Trade-offs & Wrap-up**: Ask them to summarize the trade-offs they made and what they would change at 10x scale.
 
 Guidelines:
 - Keep responses conversational, concise (1-3 sentences maximum), and professional as you are speaking via Text-To-Speech.
-- **Proactive Evaluation**: When the candidate adds new significant components to the diagram, act like a real interviewer! Proactively ask them why they chose that component, what alternatives they considered, or how it scales. Do not wait for them to finish the entire architecture. You can reply with \`...\` ONLY if they are just drawing minor lines or the canvas is mostly empty.
+- **Proactive Evaluation**: When the candidate adds ANY new labeled components to the diagram, act like a real interviewer! Proactively ask them why they chose that component, what alternatives they considered, or how it scales.
 - **Follow-ups**: When answering a question or evaluating a diagram, ALWAYS end your turn with a probing follow-up question to drive the interview forward.
 - **Context Awareness**: ALWAYS prioritize the CURRENT [Whiteboard State]. If they are drawing, evaluate what is drawn.
 - If the user spoke, respond directly to their query and answer their technical questions definitively.
@@ -159,7 +166,7 @@ Guidelines:
       messages.push({ role: 'user', content: userText })
     } else {
       // If no user text (just a polling event from drawing), we instruct the model to evaluate the drawing.
-      messages.push({ role: 'user', content: "(The candidate has paused drawing on the whiteboard. Evaluate the current architecture. If they just added a newly LABELED component and CONNECTED it to the flow (e.g., an architectural subgraph), act like a real interviewer and proactively ask a brief, conversational follow-up question about their design choice. CRITICAL: If they are just drawing an EMPTY BOX without text, or an incomplete shape, or if the diagram is very sparse, you MUST reply with EXACTLY '...' to remain completely silent. Do NOT interrupt an incomplete thought!)" })
+      messages.push({ role: 'user', content: "(The candidate has paused drawing on the whiteboard. Evaluate the current architecture based on the [Whiteboard State]. If there are labeled components, proactively ask a brief, conversational follow-up question about their design choice (e.g., 'I see you added a database, why did you choose that type?'). If the canvas is completely empty or only contains an empty box with no text, reply with EXACTLY '...' to remain silent.)" })
     }
 
     let completion

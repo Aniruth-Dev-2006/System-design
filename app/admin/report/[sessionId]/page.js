@@ -1,56 +1,145 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import styles from '../../page.module.css'
 import { supabase } from '@/lib/supabase'
+import '@excalidraw/excalidraw/index.css'
 
-const Excalidraw = dynamic(
-  async () => {
-    const mod = await import('@excalidraw/excalidraw')
-    return mod.Excalidraw
-  },
-  { ssr: false }
-)
+if (typeof window !== 'undefined') {
+  window.EXCALIDRAW_ASSET_PATH = "https://unpkg.com/@excalidraw/excalidraw/dist/"
+  
+  if (!window._workerPatched) {
+    window._workerPatched = true;
+    const OriginalWorker = window.Worker;
+    window.Worker = class extends OriginalWorker {
+      constructor(url, options) {
+        const urlStr = url instanceof URL ? url.href : String(url);
+        if (urlStr.includes('excalidraw') && urlStr.includes('file://')) {
+          super(URL.createObjectURL(new Blob([''], { type: 'application/javascript' })), options);
+        } else {
+          super(url, options);
+        }
+      }
+    };
+
+    // Suppress Excalidraw's expected timeout from the dummy worker
+    const originalConsoleError = console.error;
+    console.error = (...args) => {
+      const msg = args.map(a => (a instanceof Error ? a.message : (typeof a === 'string' ? a : ''))).join(' ');
+      if (msg.includes('Active worker did not respond')) {
+        return;
+      }
+      originalConsoleError.apply(console, args);
+    };
+  }
+}
 
 export default function ReportDetails({ params }) {
+  const unwrappedParams = use(params)
+  const sessionId = unwrappedParams.sessionId
   const [sessionData, setSessionData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [svgMarkup, setSvgMarkup] = useState(null)
 
   useEffect(() => {
     const fetchSession = async () => {
       const { data } = await supabase
-        .from('interview_sessions')
-        .select(`*, interview_links (title, level, duration_min)`)
-        .eq('id', params.sessionId)
+        .from('InterviewSession')
+        .select(`*, InterviewLink (title, level, durationMin)`)
+        .eq('id', sessionId)
         .single()
       
       setSessionData(data)
       setLoading(false)
     }
     fetchSession()
-  }, [params.sessionId])
+  }, [sessionId])
+
+  useEffect(() => {
+    if (sessionData?.canvasJson) {
+      import('@excalidraw/excalidraw').then(mod => {
+        const elements = typeof sessionData.canvasJson === 'string' ? JSON.parse(sessionData.canvasJson) : sessionData.canvasJson;
+        if (elements && elements.length > 0) {
+          try {
+            mod.exportToSvg({
+              elements,
+              appState: {
+                exportBackground: true,
+                viewBackgroundColor: '#ffffff'
+              }
+            }).then(svg => {
+              // Remove the hardcoded width/height so it scales naturally
+              svg.removeAttribute('width')
+              svg.removeAttribute('height')
+              svg.style.width = '100%'
+              svg.style.height = '100%'
+              setSvgMarkup(svg.outerHTML)
+            }).catch(err => {
+              console.error("Error generating SVG:", err)
+              setSvgMarkup('<svg></svg>')
+            })
+          } catch (err) {
+            console.error("Synchronous error generating SVG:", err)
+            setSvgMarkup('<svg></svg>')
+          }
+        } else {
+          setSvgMarkup('<svg></svg>')
+        }
+      })
+    }
+  }, [sessionData?.canvasJson])
+
+  const handleStatusUpdate = async (newStatus) => {
+    try {
+      const { error } = await supabase
+        .from('InterviewSession')
+        .update({ status: newStatus })
+        .eq('id', sessionId)
+      
+      if (error) throw error
+      
+      setSessionData(prev => ({ ...prev, status: newStatus }))
+    } catch (err) {
+      console.error(err)
+      alert('Failed to update status')
+    }
+  }
 
   if (loading) return <div className={styles.container}><div className={styles.emptyState}>Loading...</div></div>
   if (!sessionData) return <div className={styles.container}><div className={styles.emptyState}>Session not found</div></div>
 
-  const report = sessionData.report_json || {}
-  const transcript = sessionData.transcript_json || []
+  const report = sessionData.reportJson ? (typeof sessionData.reportJson === 'string' ? JSON.parse(sessionData.reportJson) : sessionData.reportJson) : {}
+  const transcript = sessionData.transcriptJson ? (typeof sessionData.transcriptJson === 'string' ? JSON.parse(sessionData.transcriptJson) : sessionData.transcriptJson) : []
 
   return (
     <div className={styles.container}>
-      <Link href={`/admin/link/${sessionData.link_id}`} className={styles.linkBtn} style={{ width: 'fit-content', marginBottom: '-16px' }}>
+      <Link href={`/admin/link/${sessionData.interviewLinkId}`} className={styles.linkBtn} style={{ width: 'fit-content', marginBottom: '-16px' }}>
         &larr; Back to Link Details
       </Link>
       
       <div className={styles.card}>
-        <h2 className={styles.title}>Candidate Report: {sessionData.candidate_name || 'Anonymous'}</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+          <h2 className={styles.title} style={{ marginBottom: 0 }}>Candidate Report: {sessionData.candidateName || 'Anonymous'}</h2>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button 
+              onClick={() => handleStatusUpdate('selected')}
+              style={{ background: sessionData.status === 'selected' ? '#059669' : '#10b981', color: 'white', padding: '8px 16px', borderRadius: '6px', border: 'none', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s', opacity: sessionData.status === 'selected' ? 0.8 : 1 }}>
+              {sessionData.status === 'selected' ? 'Selected' : 'Select Candidate'}
+            </button>
+            <button 
+              onClick={() => handleStatusUpdate('rejected')}
+              style={{ background: sessionData.status === 'rejected' ? '#b91c1c' : '#ef4444', color: 'white', padding: '8px 16px', borderRadius: '6px', border: 'none', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s', opacity: sessionData.status === 'rejected' ? 0.8 : 1 }}>
+              {sessionData.status === 'rejected' ? 'Rejected' : 'Reject Candidate'}
+            </button>
+          </div>
+        </div>
         <div style={{ display: 'flex', gap: '24px', marginBottom: '16px', color: '#a0a0a0', fontSize: '14px' }}>
           <div><strong>Status:</strong> {sessionData.status}</div>
           <div><strong>Score:</strong> {sessionData.score != null ? `${sessionData.score}/10` : 'N/A'}</div>
-          <div><strong>Started:</strong> {sessionData.started_at ? new Date(sessionData.started_at).toLocaleString() : '-'}</div>
-          <div><strong>Completed:</strong> {sessionData.completed_at ? new Date(sessionData.completed_at).toLocaleString() : '-'}</div>
+          <div><strong>Started:</strong> {sessionData.startedAt ? new Date(sessionData.startedAt).toLocaleString() : '-'}</div>
+          <div><strong>Completed:</strong> {sessionData.completedAt ? new Date(sessionData.completedAt).toLocaleString() : '-'}</div>
         </div>
 
         {report.decision && (
@@ -81,15 +170,17 @@ export default function ReportDetails({ params }) {
 
       <div className={styles.card}>
         <h2 className={styles.title}>Final Architecture Diagram</h2>
-        <div style={{ height: '500px', border: '1px solid #eaeaea', borderRadius: '8px', overflow: 'hidden', background: '#fafafa' }}>
-          {sessionData.canvas_json ? (
-            <Excalidraw
-              initialData={{ elements: sessionData.canvas_json }}
-              viewModeEnabled={true}
-              zenModeEnabled={true}
-            />
+        <div style={{ height: '500px', border: '1px solid #eaeaea', borderRadius: '8px', overflow: 'hidden', background: '#fafafa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {svgMarkup ? (
+            svgMarkup === '<svg></svg>' ? (
+              <div className={styles.emptyState}>No canvas data found</div>
+            ) : (
+              <div dangerouslySetInnerHTML={{ __html: svgMarkup }} style={{ width: '100%', height: '100%', padding: '20px', boxSizing: 'border-box' }} />
+            )
+          ) : sessionData?.canvasJson ? (
+            <div className={styles.emptyState}>Rendering Diagram...</div>
           ) : (
-            <div className={styles.emptyState} style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className={styles.emptyState}>
               No canvas data found
             </div>
           )}
@@ -105,7 +196,7 @@ export default function ReportDetails({ params }) {
             transcript.map((msg, i) => (
               <div key={i} style={{ marginBottom: '20px' }}>
                 <strong style={{ color: msg.role === 'agent' ? '#2563eb' : '#059669', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  {msg.role === 'agent' ? 'Interviewer' : sessionData.candidate_name || 'Candidate'}
+                  {msg.role === 'agent' ? 'Interviewer' : sessionData.candidateName || 'Candidate'}
                 </strong>
                 <p style={{ margin: '6px 0 0 0', fontSize: '14px', color: '#374151', lineHeight: 1.5 }}>{msg.text}</p>
               </div>

@@ -4,6 +4,35 @@ import { useEffect, useState, useRef } from 'react'
 import styles from './CanvasArea.module.css'
 import '@excalidraw/excalidraw/index.css'
 
+if (typeof window !== 'undefined') {
+  window.EXCALIDRAW_ASSET_PATH = "https://unpkg.com/@excalidraw/excalidraw/dist/"
+  
+  if (!window._workerPatched) {
+    window._workerPatched = true;
+    const OriginalWorker = window.Worker;
+    window.Worker = class extends OriginalWorker {
+      constructor(url, options) {
+        const urlStr = url instanceof URL ? url.href : String(url);
+        if (urlStr.includes('excalidraw') && urlStr.includes('file://')) {
+          super(URL.createObjectURL(new Blob([''], { type: 'application/javascript' })), options);
+        } else {
+          super(url, options);
+        }
+      }
+    };
+
+    // Suppress Excalidraw's expected timeout from the dummy worker
+    const originalConsoleError = console.error;
+    console.error = (...args) => {
+      const msg = args.map(a => (a instanceof Error ? a.message : (typeof a === 'string' ? a : ''))).join(' ');
+      if (msg.includes('Active worker did not respond')) {
+        return;
+      }
+      originalConsoleError.apply(console, args);
+    };
+  }
+}
+
 export default function CanvasArea({ onCanvasUpdate, onThemeChange }) {
   const [mounted, setMounted] = useState(false)
   const [excalidrawAPI, setExcalidrawAPI] = useState(null)
@@ -141,8 +170,8 @@ export default function CanvasArea({ onCanvasUpdate, onThemeChange }) {
       })
 
       // Excalidraw tracks bindings directly on the arrow elements (startBinding/endBinding)
-      onCanvasUpdateRef.current({ shapes: simplifiedShapes, bindings: [] })
-    }, 2000) // Poll/update every 2 seconds of inactivity
+      onCanvasUpdateRef.current({ shapes: simplifiedShapes, bindings: [], rawElements: elements })
+    }, 1000) // Poll/update every 1 second of inactivity
   }
 
   if (!mounted || !ExcalidrawComp || !MainMenuComp) return null

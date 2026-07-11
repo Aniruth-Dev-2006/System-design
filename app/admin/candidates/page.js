@@ -12,9 +12,9 @@ export default function CandidatesPage() {
   useEffect(() => {
     const fetchSessions = async () => {
       const { data } = await supabase
-        .from('interview_sessions')
-        .select(`*, interview_links (title)`)
-        .order('started_at', { ascending: false })
+        .from('InterviewSession')
+        .select(`*, InterviewLink (title)`)
+        .order('startedAt', { ascending: false })
       
       setSessions(data || [])
       setLoading(false)
@@ -46,8 +46,8 @@ export default function CandidatesPage() {
             <tbody>
               {sessions.map(session => (
                 <tr key={session.id}>
-                  <td>{session.candidate_name || 'Anonymous'}</td>
-                  <td>{session.interview_links?.title || 'Unknown'}</td>
+                  <td>{session.candidateName || 'Anonymous'}</td>
+                  <td>{session.InterviewLink?.title || 'Unknown'}</td>
                   <td>
                     <span style={{ 
                       padding: '4px 10px', 
@@ -62,7 +62,7 @@ export default function CandidatesPage() {
                     </span>
                   </td>
                   <td>{session.score != null ? `${session.score}/10` : '-'}</td>
-                  <td>{session.started_at ? new Date(session.started_at).toLocaleString() : '-'}</td>
+                  <td>{session.startedAt ? new Date(session.startedAt).toLocaleString() : '-'}</td>
                   <td>
                     {session.status === 'completed' && (
                       <Link href={`/admin/report/${session.id}`} className={styles.linkBtn}>View Report</Link>

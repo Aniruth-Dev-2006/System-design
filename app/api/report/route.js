@@ -110,13 +110,16 @@ ${interviewContext?.problem?.title || 'System Design'}
 ${interviewContext?.problem?.description || ''}
 ${interviewContext?.problem?.constraints || ''}
 
+[Expected Seniority Level]:
+${interviewContext?.level || 'medium'}
+
 [Final Whiteboard State]:
 ${canvasSummary}
 
 [Conversation Transcript]:
 ${transcript.map(m => `${m.role === 'agent' ? 'Interviewer' : 'Candidate'}: ${m.text}`).join('\n')}
 
-Based on the whiteboard design and the candidate's responses in the chat, evaluate their performance.
+Based on the whiteboard design and the candidate's responses in the chat, evaluate their performance against the [Expected Seniority Level]. A Junior (easy) should be graded more leniently on architecture depth than a Senior (hard).
 You MUST output a valid JSON object matching the following structure exactly. Do NOT wrap the JSON in Markdown (like \`\`\`json). Just return the raw JSON object.
 
 {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import styles from '../page.module.css'
 import CanvasArea from '@/components/CanvasArea'
@@ -8,6 +8,8 @@ import Sidebar from '@/components/Sidebar'
 import { supabase } from '@/lib/supabase'
 
 export default function InterviewSessionPage({ params }) {
+  const unwrappedParams = use(params)
+  const id = unwrappedParams.id
   const [canvasState, setCanvasState] = useState([])
   const [transcript, setTranscript] = useState([])
   const [isSpeaking, setIsSpeaking] = useState(false)
@@ -32,9 +34,9 @@ export default function InterviewSessionPage({ params }) {
   useEffect(() => {
     const fetchLink = async () => {
       const { data } = await supabase
-        .from('interview_links')
+        .from('InterviewLink')
         .select('*')
-        .eq('id', params.id)
+        .eq('id', id)
         .single()
       
       if (data) {
@@ -42,7 +44,7 @@ export default function InterviewSessionPage({ params }) {
         setInterviewContext({
           problem: {
             title: data.title,
-            description: data.problem_desc || 'Design a scalable system based on the interviewer prompts.',
+            description: data.problemDesc || 'Design a scalable system based on the interviewer prompts.',
             constraints: 'Focus on scale, availability, and database choices.'
           },
           level: data.level
@@ -51,7 +53,7 @@ export default function InterviewSessionPage({ params }) {
       setLoading(false)
     }
     fetchLink()
-  }, [params.id])
+  }, [id])
 
   useEffect(() => {
     if (started && timeLeft > 0) {
@@ -75,14 +77,14 @@ export default function InterviewSessionPage({ params }) {
       return
     }
 
-    // Create session in Supabase
     const { data: sessionData, error } = await supabase
-      .from('interview_sessions')
+      .from('InterviewSession')
       .insert([{
-        link_id: linkData.id,
-        candidate_name: candidateEmail ? `${candidateName} (${candidateEmail})` : candidateName,
+        id: crypto.randomUUID(),
+        interviewLinkId: linkData.id,
+        candidateName: candidateEmail ? `${candidateName} (${candidateEmail})` : candidateName,
         status: 'in_progress',
-        started_at: new Date().toISOString()
+        startedAt: new Date().toISOString()
       }])
       .select()
       .single()
@@ -94,7 +96,7 @@ export default function InterviewSessionPage({ params }) {
     }
 
     setSessionId(sessionData.id)
-    setTimeLeft(linkData.duration_min * 60)
+    setTimeLeft(linkData.durationMin * 60)
     setStarted(true)
     
     // Send an initial system prompt to trigger the welcome message
@@ -104,21 +106,22 @@ export default function InterviewSessionPage({ params }) {
   const handleCanvasUpdate = async (payload) => {
     const canvasShapes = Array.isArray(payload) ? payload : (payload.shapes || [])
     const canvasBindings = Array.isArray(payload) ? [] : (payload.bindings || [])
+    const rawElements = Array.isArray(payload) ? null : (payload.rawElements || null)
 
     const newShapesStr = JSON.stringify(canvasShapes)
     const oldShapesStr = JSON.stringify(canvasState.shapes || [])
     if (newShapesStr === oldShapesStr) return
 
-    setCanvasState({ shapes: canvasShapes, bindings: canvasBindings })
+    setCanvasState({ shapes: canvasShapes, bindings: canvasBindings, rawElements })
 
     if (started && canvasShapes.length > 0) {
       if (evaluationTimeoutRef.current) {
         clearTimeout(evaluationTimeoutRef.current)
       }
-      // Debounce silent canvas updates by 5 seconds
+      // Debounce silent canvas updates
       evaluationTimeoutRef.current = setTimeout(() => {
         evaluateState({ shapes: canvasShapes, bindings: canvasBindings }, null)
-      }, 5000)
+      }, 3000)
     }
   }
 
@@ -131,7 +134,7 @@ export default function InterviewSessionPage({ params }) {
   }
 
   const evaluateState = async (state, userText) => {
-    if (isProcessingRef.current) return
+    if (isProcessingRef.current || isReportGenerating || reportData) return
     isProcessingRef.current = true
     try {
       const payloadShapes = Array.isArray(state) ? state : (state.shapes || [])
@@ -155,6 +158,25 @@ export default function InterviewSessionPage({ params }) {
         setTranscript(prev => [...prev, { role: 'agent', text: data.reply }])
 
         const utterance = new SpeechSynthesisUtterance(data.reply)
+        
+        // Find a soft female voice
+        const voices = window.speechSynthesis.getVoices()
+        const femaleVoice = voices.find(v => 
+          v.name.includes('Female') || 
+          v.name.includes('Samantha') || 
+          v.name.includes('Victoria') || 
+          v.name.includes('Zira') ||
+          v.name.includes('Google UK English Female') ||
+          v.name.includes('Karen') ||
+          v.name.includes('Moira')
+        )
+        if (femaleVoice) {
+          utterance.voice = femaleVoice
+        }
+        
+        utterance.pitch = 1.1
+        utterance.rate = 0.95
+
         utterance.onstart = () => setIsSpeaking(true)
         utterance.onend = () => setIsSpeaking(false)
         window.speechSynthesis.speak(utterance)
@@ -167,10 +189,13 @@ export default function InterviewSessionPage({ params }) {
   }
 
   const handleEndInterview = async () => {
+    window.speechSynthesis.cancel()
+    if (evaluationTimeoutRef.current) clearTimeout(evaluationTimeoutRef.current)
     setIsReportGenerating(true)
     try {
       const payloadShapes = Array.isArray(canvasState) ? canvasState : (canvasState.shapes || [])
       const payloadBindings = Array.isArray(canvasState) ? [] : (canvasState.bindings || [])
+      const rawElementsForDB = canvasState.rawElements || payloadShapes
 
       const response = await fetch('/api/report', {
         method: 'POST',
@@ -189,17 +214,21 @@ export default function InterviewSessionPage({ params }) {
         
         // Update Supabase session
         if (sessionId) {
-          await supabase
-            .from('interview_sessions')
+          const { error: updateError } = await supabase
+            .from('InterviewSession')
             .update({
               status: 'completed',
-              score: data.score,
-              report_json: data,
-              canvas_json: payloadShapes,
-              transcript_json: transcript,
-              completed_at: new Date().toISOString()
+              score: Math.round(Number(data.score) || 0),
+              reportJson: JSON.stringify(data),
+              canvasJson: JSON.stringify(rawElementsForDB),
+              transcriptJson: JSON.stringify(transcript),
+              completedAt: new Date().toISOString()
             })
             .eq('id', sessionId)
+            
+          if (updateError) {
+            console.error("Failed to update session status:", updateError)
+          }
         }
       } else {
         console.error("Failed to generate report:", data.error)
@@ -320,7 +349,7 @@ export default function InterviewSessionPage({ params }) {
               onMouseOver={e => e.target.style.background = '#374151'}
               onMouseOut={e => e.target.style.background = '#111827'}
             >
-              Start Interview ({linkData.duration_min} min)
+              Start Interview ({linkData.durationMin} min)
             </button>
           </div>
         </div>

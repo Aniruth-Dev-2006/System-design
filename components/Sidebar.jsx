@@ -44,7 +44,7 @@ export default function Sidebar({ transcript, isSpeaking, onUserMessage, onEndIn
       </div>
       
       <div className={styles.sidebarFooter}>
-        <button className={styles.endInterviewBtn} onClick={onEndInterview}>
+        <button className={styles.endInterviewButton} onClick={onEndInterview}>
           End Interview
         </button>
       </div>

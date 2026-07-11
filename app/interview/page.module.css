@@ -178,11 +178,10 @@
 }
 
 .startScreenContent h2 {
-  color: #fff;
+  color: #111827;
   font-size: 24px;
-  font-weight: 500;
+  font-weight: 600;
   margin: 0;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 
 .startOrbWrapper {

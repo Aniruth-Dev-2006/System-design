@@ -24,7 +24,6 @@
 
 .contentWrapper {
   position: relative;
-  z-index: 10;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -233,13 +232,13 @@
 
 .orbVideo {
   width: 100%;
-  max-width: 700px;
+  max-width: 500px;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
   border-radius: 50%;
-  mask-image: radial-gradient(circle, white 90%, transparent 100%);
-  -webkit-mask-image: -webkit-radial-gradient(circle, white 90%, transparent 100%);
+  mix-blend-mode: multiply;
+  filter: contrast(1.1) brightness(1.05);
   pointer-events: none;
-  box-shadow: 0 0 60px rgba(0, 0, 0, 0.1);
 }
 
 .footerLogos {

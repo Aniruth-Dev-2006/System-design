@@ -1,26 +1,48 @@
 .adminLayout {
   display: flex;
   height: 100vh;
-  background-color: #fbfbfb; /* Slightly off-white for the main content area */
-  color: #111827;
-  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #ffffff;
+  color: #111;
+  font-family: var(--font-inter), sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+.backgroundGlow {
+  position: absolute;
+  top: -200px;
+  left: -200px;
+  width: 1000px;
+  height: 1000px;
+  background: radial-gradient(circle, rgba(233, 155, 99, 0.4) 0%, rgba(233, 155, 99, 0) 70%);
+  filter: blur(80px);
+  z-index: 0;
+  pointer-events: none;
 }
 
 /* Primary Sidebar (Slim, Icon-only) */
 .primarySidebar {
-  width: 64px;
-  background-color: #ffffff;
-  border-right: 1px solid #eaeaea;
+  width: 72px;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 24px 0;
+  padding: 32px 0;
   z-index: 20;
+  box-shadow: inset 0px 0px 10px rgba(255, 255, 255, 0.5);
 }
 
 .logoWrapper {
   margin-bottom: 40px;
-  color: #111827;
+  color: #111;
+}
+
+.sidebarLogoImg {
+  width: 28px;
+  height: auto;
 }
 
 .primaryNav {
@@ -56,12 +78,14 @@
 
 /* Secondary Sidebar (Project List) */
 .secondarySidebar {
-  width: 260px;
-  background-color: #ffffff;
-  border-right: 1px solid #eaeaea;
+  width: 280px;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
-  padding: 24px;
+  padding: 32px 24px;
   z-index: 10;
 }
 
@@ -145,7 +169,8 @@
 }
 
 .activeProject .projectIcon {
-  background-color: #3b82f6; /* Blue accent for active project like the image */
+  background-color: #3b82f6;
+  /* Blue accent for active project like the image */
   color: #ffffff;
 }
 
@@ -158,13 +183,13 @@
 }
 
 .header {
-  height: 64px;
+  height: 80px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 40px;
-  background-color: #fbfbfb;
-  border-bottom: 1px solid #eaeaea;
+  background: transparent;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   position: sticky;
   top: 0;
   z-index: 5;
@@ -200,4 +225,101 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  position: relative;
+  z-index: 2;
+}
+
+/* Login Screen Styles */
+.loginContainer {
+  min-height: 100vh;
+  background-color: #ffffff;
+  color: #111;
+  font-family: var(--font-inter), sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.loginCard {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 400px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 24px;
+  padding: 48px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.05),
+    inset 0px 4px 4px 0px rgba(255, 255, 255, 0.5);
+}
+
+.loginLogoImg {
+  width: 120px;
+  height: auto;
+  margin-bottom: 8px;
+}
+
+.loginTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 32px;
+}
+
+.loginForm {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.inputField {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.8);
+  font-size: 15px;
+  color: #111;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.inputField:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+}
+
+.errorText {
+  color: #ef4444;
+  font-size: 13px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.loginButton {
+  margin-top: 8px;
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #111, #333);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+.loginButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
 }

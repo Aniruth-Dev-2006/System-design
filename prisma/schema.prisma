@@ -31,3 +31,9 @@ model InterviewSession {
   
   link            InterviewLink @relation(fields: [interviewLinkId], references: [id])
 }
+
+model AdminUser {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+}

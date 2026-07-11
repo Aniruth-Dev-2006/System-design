@@ -10,8 +10,8 @@ export default function AdminDashboard() {
   const [formData, setFormData] = useState({
     title: '',
     level: 'medium',
-    duration_min: 30,
-    problem_desc: ''
+    durationMin: 30,
+    problemDesc: ''
   })
   const [submitting, setSubmitting] = useState(false)
 
@@ -19,8 +19,8 @@ export default function AdminDashboard() {
     e.preventDefault()
     setSubmitting(true)
     const { data, error } = await supabase
-      .from('interview_links')
-      .insert([formData])
+      .from('InterviewLink')
+      .insert([{ id: crypto.randomUUID(), ...formData }])
       .select()
 
     if (error) {
@@ -69,8 +69,11 @@ export default function AdminDashboard() {
                 min="5" 
                 max="180" 
                 required
-                value={formData.duration_min}
-                onChange={e => setFormData({...formData, duration_min: parseInt(e.target.value)})}
+                value={formData.durationMin}
+                onChange={e => {
+                  const val = parseInt(e.target.value)
+                  setFormData({...formData, durationMin: isNaN(val) ? '' : val})
+                }}
               />
             </div>
           </div>
@@ -79,8 +82,8 @@ export default function AdminDashboard() {
             <textarea 
               rows={4}
               placeholder="Leave blank to use a random problem from the selected level, or provide a specific system design scenario."
-              value={formData.problem_desc}
-              onChange={e => setFormData({...formData, problem_desc: e.target.value})}
+              value={formData.problemDesc}
+              onChange={e => setFormData({...formData, problemDesc: e.target.value})}
             />
           </div>
           <button type="submit" className={styles.submitBtn} disabled={submitting}>

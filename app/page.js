@@ -120,7 +120,7 @@ export default function LandingPage() {
                 Draw your system architecture naturally using our built-in whiteboard tools.
               </p>
             </div>
-            
+
             <div className={styles.featureCard}>
               <div className={styles.featureIcon}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -134,7 +134,7 @@ export default function LandingPage() {
                 Xona analyzes your components and connections as you build them, providing instant insights.
               </p>
             </div>
-            
+
             <div className={styles.featureCard}>
               <div className={styles.featureIcon}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
