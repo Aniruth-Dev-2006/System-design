@@ -4,7 +4,7 @@ let currentKeyIndex = 0;
 
 export async function POST(req) {
   try {
-    const { shapes, bindings, transcript } = await req.json()
+  const { shapes, bindings, transcript, interviewContext } = await req.json()
     
     const keys = [
       process.env.GROQ_API_KEY_1,
@@ -103,7 +103,12 @@ export async function POST(req) {
     }
 
     const systemPrompt = `You are an expert Staff-level Software Engineer grading a candidate's System Design Interview.
-You have access to their final whiteboard state and the entire conversation transcript.
+You have access to their assigned problem, their final whiteboard state, and the entire conversation transcript.
+
+[Assigned Problem]:
+${interviewContext?.problem?.title || 'System Design'}
+${interviewContext?.problem?.description || ''}
+${interviewContext?.problem?.constraints || ''}
 
 [Final Whiteboard State]:
 ${canvasSummary}

@@ -1,0 +1,61 @@
+.orbContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px 0;
+  width: 100%;
+}
+
+.orbButton {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.orbButton:hover {
+  transform: scale(1.05);
+}
+
+.orbVideo {
+  width: 150%;
+  height: 150%;
+  object-fit: cover;
+  border-radius: 50%;
+  mask-image: radial-gradient(circle, white 38%, transparent 40%);
+  -webkit-mask-image: -webkit-radial-gradient(circle, white 38%, transparent 40%);
+  z-index: 2;
+  position: relative;
+}
+
+.interimText {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-style: italic;
+  text-align: center;
+  max-width: 90%;
+  word-wrap: break-word;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

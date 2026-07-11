@@ -1,11 +1,10 @@
 'use client'
 
 import { useRef, useEffect } from 'react'
-import Avatar from './Avatar'
-import VoiceControl from './VoiceControl'
+import InteractiveOrb from './InteractiveOrb'
 import styles from './Sidebar.module.css'
 
-export default function Sidebar({ transcript, isSpeaking, onUserMessage, started, onStart, onEndInterview }) {
+export default function Sidebar({ transcript, isSpeaking, onUserMessage, onEndInterview }) {
   const scrollRef = useRef(null)
 
   useEffect(() => {
@@ -16,29 +15,40 @@ export default function Sidebar({ transcript, isSpeaking, onUserMessage, started
 
   return (
     <div className={styles.sidebar}>
-      <div className={styles.header}>
-        <h2>System Design Interview</h2>
-        <span className={styles.statusBadge}>Live</span>
-      </div>
       
-      <Avatar isSpeaking={isSpeaking} />
+      <InteractiveOrb onUserMessage={onUserMessage} />
       
       <div className={styles.transcriptArea} ref={scrollRef}>
-        {!started ? (
-          <div className={styles.startOverlay}>
-            <button className={styles.startButton} onClick={onStart}>Start Interview</button>
-          </div>
-        ) : (
-          transcript.map((msg, idx) => (
-            <div key={idx} className={`${styles.message} ${styles[msg.role]}`}>
-              <strong>{msg.role === 'agent' ? 'AI Interviewer' : 'You'}: </strong>
+        {transcript.map((msg, idx) => (
+          <div key={idx} className={`${styles.messageWrapper} ${msg.role === 'agent' ? styles.wrapperAgent : styles.wrapperUser}`}>
+            <div className={styles.messageLabel}>
+              {msg.role === 'agent' ? (
+                <>
+                  Xona
+                </>
+              ) : (
+                <>
+                  You
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                </>
+              )}
+            </div>
+            <div className={`${styles.messageBubble} ${styles[msg.role]}`}>
               {msg.text}
             </div>
-          ))
-        )}
+          </div>
+        ))}
       </div>
       
-      <VoiceControl onUserMessage={onUserMessage} />
+      <div className={styles.sidebarFooter}>
+        <button className={styles.endInterviewBtn} onClick={onEndInterview}>
+          End Interview
+        </button>
+      </div>
+      
     </div>
   )
 }

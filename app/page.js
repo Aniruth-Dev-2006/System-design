@@ -47,7 +47,7 @@ export default function LandingPage() {
         {/* Navbar */}
         <nav className={styles.navbar}>
           <Link href="/" className={styles.logo}>
-            AI Interviewer
+            <img src="https://xobin.com/wp-content/uploads/2026/04/logo-CQAmVy86.png" alt="Xobin Logo" className={styles.logoImg} />
           </Link>
           <div className={styles.navLinks}>
             <Link href="#" className={styles.navLink}>Home</Link>
@@ -70,32 +70,31 @@ export default function LandingPage() {
               </div>
               Rated 4.9/5 by 2700+ candidates
             </div>
-            
+
             <h1 className={styles.headline}>
               Master your system<br />design interviews
             </h1>
-            
+
             <p className={styles.subheadline}>
               Practice with an elite AI engineering manager. Draw architectures on a digital whiteboard, get real-time feedback, and land your dream job at a top-tier tech company.
             </p>
-            
+
             <div className={styles.ctaWrapper}>
               <Link href="/interview" className={styles.primaryCta}>
                 Get Started Now
-                <div className={styles.ctaArrow}>→</div>
               </Link>
             </div>
           </div>
 
           {/* Hero Right: Orb Video */}
           <div className={styles.heroRight}>
-            <video 
-              autoPlay 
-              loop 
-              muted 
-              playsInline 
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
               className={styles.orbVideo}
-              src="https://future.co/images/homepage/glassy-orb/orb-purple.webm"
+              src="https://cdn.dribbble.com/userupload/15697531/file/original-0242acdc69146d4472fc5e69b48616dc.mp4"
             />
           </div>
         </main>
@@ -105,83 +104,70 @@ export default function LandingPage() {
           <div className={styles.featuresHeader}>
             <h2 className={styles.featuresTitle}>Experience the Interview</h2>
             <p className={styles.featuresSubtitle}>
-              Our AI evaluates your architecture in real-time as you draw on the whiteboard, simulating a real Staff-level engineering interview at top-tier companies.
+              Simulate a real Staff-level engineering interview at top-tier companies.
             </p>
           </div>
-
-          <div className={styles.mockupContainer}>
-            <div className={styles.motionalVideoWrapper}>
-              {slides.map((slide, index) => (
-                <img 
-                  key={slide}
-                  src={slide}
-                  alt={`Walkthrough Step ${index + 1}`}
-                  className={`${styles.mockupImage} ${styles.motionalSlide} ${currentSlide === index ? styles.activeSlide : ''}`}
-                />
-              ))}
+          <div className={styles.featuresGrid}>
+            <div className={styles.featureCard}>
+              <div className={styles.featureIcon}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+              </div>
+              <h3 className={styles.featureCardTitle}>Interactive Canvas</h3>
+              <p className={styles.featureCardDesc}>
+                Draw your system architecture naturally using our built-in whiteboard tools.
+              </p>
+            </div>
+            
+            <div className={styles.featureCard}>
+              <div className={styles.featureIcon}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+              </div>
+              <h3 className={styles.featureCardTitle}>Real-time Feedback</h3>
+              <p className={styles.featureCardDesc}>
+                Xona analyzes your components and connections as you build them, providing instant insights.
+              </p>
+            </div>
+            
+            <div className={styles.featureCard}>
+              <div className={styles.featureIcon}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                  <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                  <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>
+              </div>
+              <h3 className={styles.featureCardTitle}>Deep Dives</h3>
+              <p className={styles.featureCardDesc}>
+                Prepare to be challenged on trade-offs, bottlenecks, scalability, and algorithms.
+              </p>
             </div>
           </div>
         </section>
 
-        {/* Testimonials Section */}
-        <section id="testimonials" className={styles.testimonialsSection}>
-          <h2 className={styles.sectionTitle}>Success Stories</h2>
-          <div className={styles.testimonialsMarqueeWrapper}>
-            <div className={styles.testimonialsMarqueeContent}>
-              {testimonials.map((test, i) => (
-                <div key={`test1-${i}`} className={styles.testimonialCard}>
-                  <div className={styles.stars}>
-                    <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
-                  </div>
-                  <p className={styles.testimonialQuote}>"{test.quote}"</p>
-                  <div className={styles.testimonialAuthor}>
-                    <strong>{test.author}</strong>
-                    <span>{test.role}</span>
-                  </div>
-                </div>
-              ))}
-              {/* Duplicate for infinite loop */}
-              {testimonials.map((test, i) => (
-                <div key={`test2-${i}`} className={styles.testimonialCard}>
-                  <div className={styles.stars}>
-                    <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
-                  </div>
-                  <p className={styles.testimonialQuote}>"{test.quote}"</p>
-                  <div className={styles.testimonialAuthor}>
-                    <strong>{test.author}</strong>
-                    <span>{test.role}</span>
-                  </div>
-                </div>
-              ))}
+        {/* Professional CTA Section */}
+        <section className={styles.ctaSection}>
+          <div className={styles.ctaBox}>
+            <div className={styles.ctaContent}>
+              <h2 className={styles.ctaTitle}>Ready to Ace Your Next Interview?</h2>
+              <p className={styles.ctaSubtitle}>
+                Join thousands of engineers who have leveled up their system design skills with our AI-powered interactive whiteboarding platform.
+              </p>
+              <Link href="/interview" className={styles.ctaButton}>
+                Start Practicing Now
+              </Link>
             </div>
+            {/* Background elements for the glassmorphism effect */}
+            <div className={styles.ctaDecoration1}></div>
+            <div className={styles.ctaDecoration2}></div>
           </div>
         </section>
-
-        {/* Footer Logos */}
-        <footer className={styles.footerLogos}>
-          <span className={styles.footerTitle}>Trusted by engineers from top-tier product companies</span>
-          <div className={styles.marqueeContainer}>
-            <div className={styles.marqueeContent}>
-              <span className={styles.companyName}>Google</span>
-              <span className={styles.companyName}>Meta</span>
-              <span className={styles.companyName}>Amazon</span>
-              <span className={styles.companyName}>Netflix</span>
-              <span className={styles.companyName}>Apple</span>
-              <span className={styles.companyName}>Uber</span>
-              <span className={styles.companyName}>Stripe</span>
-              <span className={styles.companyName}>Airbnb</span>
-              {/* Duplicate for infinite loop */}
-              <span className={styles.companyName}>Google</span>
-              <span className={styles.companyName}>Meta</span>
-              <span className={styles.companyName}>Amazon</span>
-              <span className={styles.companyName}>Netflix</span>
-              <span className={styles.companyName}>Apple</span>
-              <span className={styles.companyName}>Uber</span>
-              <span className={styles.companyName}>Stripe</span>
-              <span className={styles.companyName}>Airbnb</span>
-            </div>
-          </div>
-        </footer>
       </div>
     </div>
   )

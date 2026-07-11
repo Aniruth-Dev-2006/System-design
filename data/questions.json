@@ -1,0 +1,63 @@
+{
+  "easy": [
+    {
+      "title": "URL Shortener",
+      "description": "Design a service like bit.ly that takes a long URL and generates a unique, shortened URL that redirects to the original URL.",
+      "constraints": "Focus on API design, base62 encoding vs hashing, database schema, and high read vs write ratio."
+    },
+    {
+      "title": "Pastebin Service",
+      "description": "Design a service where users can paste blocks of text and share them via a unique URL.",
+      "constraints": "Focus on storage, data expiration, caching, and database choices."
+    },
+    {
+      "title": "Rate Limiter",
+      "description": "Design an API Rate Limiter to throttle excessive requests from users and prevent abuse.",
+      "constraints": "Focus on algorithms (Token Bucket, Leaky Bucket), distributed caching (Redis), and latency."
+    }
+  ],
+  "medium": [
+    {
+      "title": "Twitter / News Feed",
+      "description": "Design a system like Twitter where users can post tweets, follow other users, and view a personalized chronological news feed.",
+      "constraints": "Focus on fan-out on write vs fan-out on read, caching strategies for celebrity accounts, and high concurrency."
+    },
+    {
+      "title": "Key-Value Store",
+      "description": "Design a highly available distributed key-value store like Redis or DynamoDB.",
+      "constraints": "Focus on data partitioning, replication, CAP theorem tradeoffs, and consistent hashing."
+    },
+    {
+      "title": "Chat Application",
+      "description": "Design a real-time chat application like WhatsApp or Discord.",
+      "constraints": "Focus on WebSockets, connection management, message ordering, and presence services."
+    },
+    {
+      "title": "Ticketmaster",
+      "description": "Design a ticketing system for highly popular events that sell out in seconds.",
+      "constraints": "Focus on handling massive concurrent writes, inventory locks, and database transactions."
+    }
+  ],
+  "hard": [
+    {
+      "title": "Ride-Sharing Platform",
+      "description": "Design a ride-sharing service like Uber or Lyft that matches drivers with riders.",
+      "constraints": "Focus on geospatial indexing (QuadTrees/Geohash), real-time location tracking, distributed transactions, and high availability."
+    },
+    {
+      "title": "Video Streaming Service",
+      "description": "Design a video streaming platform like YouTube or Netflix.",
+      "constraints": "Focus on video encoding pipelines, CDN architecture, chunking, and handling highly skewed access patterns."
+    },
+    {
+      "title": "Distributed Message Queue",
+      "description": "Design a distributed message queue system like Apache Kafka.",
+      "constraints": "Focus on sequential disk I/O, partition leadership, consumer groups, and exactly-once vs at-least-once semantics."
+    },
+    {
+      "title": "Google Drive / Dropbox",
+      "description": "Design a cloud file storage and synchronization service.",
+      "constraints": "Focus on block-level deduplication, chunking large files, metadata consistency, and efficient syncing."
+    }
+  ]
+}

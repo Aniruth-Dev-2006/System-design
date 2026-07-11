@@ -1,12 +1,13 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import styles from './VoiceControl.module.css'
+import styles from './InteractiveOrb.module.css'
 
-export default function VoiceControl({ onUserMessage }) {
+export default function InteractiveOrb({ onUserMessage }) {
   const [isRecording, setIsRecording] = useState(false)
   const [interimText, setInterimText] = useState('')
   const recognitionRef = useRef(null)
+  const videoRef = useRef(null)
   
   const onUserMessageRef = useRef(onUserMessage)
   useEffect(() => {
@@ -58,7 +59,7 @@ export default function VoiceControl({ onUserMessage }) {
 
   const toggleRecording = () => {
     if (isRecording) {
-      // If user stops manually, flush the interim text as a final message if any
+      // Stop recording
       if (interimText.trim().length > 0) {
         onUserMessageRef.current(interimText)
         setInterimText('')
@@ -66,49 +67,47 @@ export default function VoiceControl({ onUserMessage }) {
       recognitionRef.current?.stop()
       setIsRecording(false)
     } else {
+      // Start recording
       setInterimText('')
       recognitionRef.current?.start()
       setIsRecording(true)
     }
   }
 
+  // Handle video play/pause based on recording state
+  useEffect(() => {
+    if (videoRef.current) {
+      if (isRecording) {
+        videoRef.current.play().catch(e => console.warn("Video play failed", e))
+      } else {
+        videoRef.current.pause()
+      }
+    }
+  }, [isRecording])
+
   return (
-    <div className={styles.controlContainer}>
+    <div className={styles.orbContainer}>
+      <button 
+        type="button" 
+        className={`${styles.orbButton} ${isRecording ? styles.recording : ''}`}
+        onClick={toggleRecording}
+        title={isRecording ? "Mute" : "Unmute"}
+      >
+        <video 
+          ref={videoRef}
+          loop 
+          muted 
+          playsInline 
+          className={styles.orbVideo}
+          src="https://cdn.dribbble.com/userupload/15697531/file/original-0242acdc69146d4472fc5e69b48616dc.mp4"
+        />
+      </button>
+
       {interimText && (
         <div className={styles.interimText}>
           "{interimText}"
         </div>
       )}
-      
-      <div className={styles.micWrapper}>
-        <button 
-          type="button"
-          className={`${styles.micButton} ${isRecording ? styles.recording : ''}`}
-          onClick={toggleRecording}
-          title="Tap to Speak"
-        >
-          <div className={styles.buttonContent}>
-            {isRecording ? (
-              <>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="6" y="6" width="12" height="12" rx="2" ry="2"></rect>
-                </svg>
-                Stop Recording
-              </>
-            ) : (
-              <>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
-                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                  <line x1="12" y1="19" x2="12" y2="23"></line>
-                  <line x1="8" y1="23" x2="16" y2="23"></line>
-                </svg>
-                Tap to Speak
-              </>
-            )}
-          </div>
-        </button>
-      </div>
     </div>
   )
 }

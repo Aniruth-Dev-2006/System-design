@@ -12,12 +12,26 @@ export default function CanvasArea({ onCanvasUpdate, onThemeChange }) {
   const [MainMenuComp, setMainMenuComp] = useState(null)
 
   useEffect(() => {
-    import('@excalidraw/excalidraw').then(module => {
-      setExcalidrawComp(() => module.Excalidraw)
-      setMainMenuComp(() => module.MainMenu)
-    })
+    if (typeof window !== 'undefined') {
+      import('@excalidraw/excalidraw').then((mod) => {
+        setExcalidrawComp(() => mod.Excalidraw)
+        setMainMenuComp(() => mod.MainMenu)
+      })
+    }
     setMounted(true)
   }, [])
+
+  useEffect(() => {
+    if (excalidrawAPI) {
+      excalidrawAPI.updateScene({
+        appState: {
+          isLibraryOpen: true,
+          isSidebarDocked: true,
+          defaultSidebarDockedPreference: true
+        }
+      })
+    }
+  }, [excalidrawAPI])
   
   const onCanvasUpdateRef = useRef(onCanvasUpdate)
   useEffect(() => {
@@ -25,7 +39,6 @@ export default function CanvasArea({ onCanvasUpdate, onThemeChange }) {
   }, [onCanvasUpdate])
 
   useEffect(() => {
-    setMounted(true)
     // Fetch the library items
     fetch('/system-design.excalidrawlib')
       .then(res => res.json())
@@ -139,6 +152,15 @@ export default function CanvasArea({ onCanvasUpdate, onThemeChange }) {
       <ExcalidrawComp 
         excalidrawAPI={(api) => setExcalidrawAPI(api)}
         onChange={handleOnChange}
+        UIOptions={{ dockedSidebarBreakpoint: 0 }}
+        initialData={{
+          appState: { 
+            defaultSidebarDockedPreference: true, 
+            isSidebarDocked: true,
+            isLibraryOpen: true,
+            theme: "light"
+          }
+        }}
       >
         <MainMenuComp>
           <MainMenuComp.DefaultItems.SaveAsImage />

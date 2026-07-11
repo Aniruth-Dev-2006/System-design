@@ -7,11 +7,7 @@ let currentKeyIndex = 0;
 
 export async function POST(req) {
   try {
-    const { shapes, bindings, userText, transcript } = await req.json()
-    
-    // DEBUG: Dump shapes to a file so we can inspect the exact Tldraw richText structure
-    require('fs').writeFileSync('c:\\Users\\aniru\\Documents\\System-Design\\shapes-debug.json', JSON.stringify({ shapes, bindings }, null, 2))
-    
+    const { shapes, bindings, userText, transcript, interviewContext } = await req.json()
     // Retrieve all configured API keys
     const keys = [
       process.env.GROQ_API_KEY_1,
@@ -117,40 +113,38 @@ export async function POST(req) {
       canvasSummary = desc
     }
 
+    let problemContextStr = "The user has not been assigned a specific problem yet."
+    if (interviewContext && interviewContext.problem) {
+      problemContextStr = `The candidate has been assigned the following problem based on their ${interviewContext.level} level of experience:
+Title: ${interviewContext.problem.title}
+Description: ${interviewContext.problem.description}
+Constraints to focus on: ${interviewContext.problem.constraints}`
+    }
+
     // Build the system prompt
-    const systemPrompt = `You are an expert Staff-level Software Engineer conducting a System Design Interview. 
-The candidate is designing a system on a digital whiteboard.
+    const systemPrompt = `You are Xona, an expert Staff-level Software Engineer conducting a System Design Interview. 
+The candidate is designing a system on a digital whiteboard using Excalidraw.
 You have access to a text representation of their whiteboard:
 [Whiteboard State]: ${canvasSummary}
 
-The candidate is using the following semantic shapes on the canvas:
-| Shape/Prefix | Representation | Example |
-|---|---|---|
-| Rectangle | Service, API, component | Auth Service, API Gateway |
-| Oval/Rounded | Process or server | Background Job |
-| 🛢️ Cylinder / DB | Database or persistent storage | MySQL, Redis |
-| Cloud | External service, cloud provider | AWS S3, Stripe |
-| Diamond | Decision/condition | "User Exists?" |
-| Circle | Event, start/end, connector | Kafka Event |
-| 📄 Document | File or document | PDF, Log File |
-| 📦 Box | Container, deployment unit, server | Docker Container |
-| Arrow / Connection | Data flow, request, response | HTTP Request |
-| 📬 Queue | Message queue | RabbitMQ, Kafka Topic |
-| 💾 Disk | Storage volume | Local Disk, NAS |
-| 👤 Person | User, client, admin | Customer |
-| 🌐 Browser | Web client | Chrome |
-| 📱 Phone | Mobile application | iOS App |
+[Interview Context]: ${problemContextStr}
 
-Follow this structured interview format:
-1. **Welcome & Requirements**: If this is the beginning of the interview (the very first message), you MUST proactively CHOOSE a random System Design problem (e.g., URL Shortener, E-Commerce, Chat App, Ride-Sharing) and ASSIGN it to the candidate. Do NOT ask them what they want to design; you are the interviewer, YOU pick the topic and ask them to start!
-2. **Context Awareness**: ALWAYS prioritize the CURRENT [Whiteboard State] over past chat history. If the candidate ignores your proposed problem and starts designing a completely different system on the whiteboard, you MUST adapt to their chosen system and evaluate what is currently drawn instead of complaining that they went off-topic.
-3. **High-Level Design**: As they draw, evaluate if they have the core components for the system they are designing.
-4. **Deep Dive & Course Correction**: Once the high-level design is sketched, ask about scaling/bottlenecks. Gently interrupt if they make a fundamental architectural mistake.
+The candidate may use standard Excalidraw shapes (rectangles, ellipses, diamonds, etc.) arbitrarily. Do not assume a specific meaning for any shape based purely on its geometry. Instead, deduce the components and system logic primarily by reading their text labels and following the arrows/lines that connect them to understand the data flow.
+
+Follow this structured interview format. You must drive the conversation through these specific stages:
+1. **Welcome & Requirements Gathering**: If this is the very first message, greet the candidate, introduce yourself as Xona, and state the assigned problem from the [Interview Context]. DO NOT state any scale or constraints upfront. Instead, wait for the candidate to ask clarifying questions. **CRITICAL: When the candidate asks a clarifying question (e.g., about file size, scale, latency), YOU MUST INVENT AND PROVIDE REALISTIC NUMBERS/ANSWERS for them to use (e.g., "Assume a maximum size of 10MB per paste" or "Assume 1 million DAU"). Do not just acknowledge their question without answering it!**
+2. **Capacity Estimates**: Once requirements are clear, ask them to do back-of-the-envelope estimations (e.g., QPS, storage, bandwidth).
+3. **High-Level Design**: Ask them to draw the core components on the Excalidraw whiteboard. Evaluate their initial architecture and data flow.
+4. **Deep Dives**: Drill into specific components (e.g., database schema, consistency vs availability, specific algorithms like Token Bucket).
+5. **Trade-offs & Wrap-up**: Ask them to summarize the trade-offs they made and what they would change at 10x scale.
+
 Guidelines:
 - Keep responses conversational, concise (1-3 sentences maximum), and professional as you are speaking via Text-To-Speech.
-- **When asked to review the design**, do not just list the components. Explain the architecture as a cohesive data flow narrative. Start from the user/client and trace the path (e.g., "I see a Client node that makes an API request to the Decision service, which then either queues the task or sends it to the Server.").
-- If the user spoke, respond directly to their query.
-- If the user is just drawing and making good progress, encourage them or ask the next logical question.`
+- **Proactive Evaluation**: When the candidate adds new significant components to the diagram, act like a real interviewer! Proactively ask them why they chose that component, what alternatives they considered, or how it scales. Do not wait for them to finish the entire architecture. You can reply with \`...\` ONLY if they are just drawing minor lines or the canvas is mostly empty.
+- **Follow-ups**: When answering a question or evaluating a diagram, ALWAYS end your turn with a probing follow-up question to drive the interview forward.
+- **Context Awareness**: ALWAYS prioritize the CURRENT [Whiteboard State]. If they are drawing, evaluate what is drawn.
+- If the user spoke, respond directly to their query and answer their technical questions definitively.
+- If they are making good progress on a stage, naturally transition to the next stage.`
 
     const messages = [
       { role: 'system', content: systemPrompt },
@@ -165,7 +159,7 @@ Guidelines:
       messages.push({ role: 'user', content: userText })
     } else {
       // If no user text (just a polling event from drawing), we instruct the model to evaluate the drawing.
-      messages.push({ role: 'user', content: "(The candidate updated the whiteboard silently. You are watching them draw. You may offer a brief, helpful observation, ask a quick follow-up question about a newly added component, or provide a hint if they seem stuck. However, do NOT just restate what they drew. If they are just laying out basic components and you have nothing meaningful to add, reply with EXACTLY '...' to stay quiet.)" })
+      messages.push({ role: 'user', content: "(The candidate has paused drawing on the whiteboard. Evaluate the current architecture. If they just added a newly LABELED component and CONNECTED it to the flow (e.g., an architectural subgraph), act like a real interviewer and proactively ask a brief, conversational follow-up question about their design choice. CRITICAL: If they are just drawing an EMPTY BOX without text, or an incomplete shape, or if the diagram is very sparse, you MUST reply with EXACTLY '...' to remain completely silent. Do NOT interrupt an incomplete thought!)" })
     }
 
     let completion
