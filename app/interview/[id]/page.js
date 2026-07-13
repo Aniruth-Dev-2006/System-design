@@ -53,6 +53,14 @@ export default function InterviewSessionPage({ params }) {
       setLoading(false)
     }
     fetchLink()
+    
+    // Preload voices to prevent the male/female voice switching bug
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.getVoices()
+      window.speechSynthesis.onvoiceschanged = () => {
+        window.speechSynthesis.getVoices()
+      }
+    }
   }, [id])
 
   useEffect(() => {
