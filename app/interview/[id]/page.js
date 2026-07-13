@@ -422,6 +422,13 @@ export default function InterviewSessionPage({ params }) {
                 {reportData.weaknesses?.map((w, i) => <li key={i}>{w}</li>)}
               </ul>
             </div>
+
+            {reportData.recommendation && (
+              <div className={styles.reportSection}>
+                <h3>Recommendation</h3>
+                <p style={{ fontWeight: '500', color: '#111827' }}>{reportData.recommendation}</p>
+              </div>
+            )}
             
             <div className={styles.reportSection}>
               <h3>Detailed Feedback</h3>

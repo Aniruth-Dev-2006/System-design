@@ -123,6 +123,16 @@ ${canvasSummary}
 ${transcript.map(m => `${m.role === 'agent' ? 'Interviewer' : 'Candidate'}: ${m.text}`).join('\n')}
 
 Based on the whiteboard design and the candidate's responses in the chat, evaluate their performance against the [Expected Seniority Level]. A Junior (easy) should be graded more leniently on architecture depth than a Senior (hard).
+
+CRITICAL GRADING RUBRIC:
+You must grade the candidate on their adherence to the proper system design lifecycle:
+1. **Requirement Gathering**: Did they explicitly ask for and define Functional and Non-Functional Requirements (FR/NFRs)?
+2. **Capacity Estimation**: Did they do back-of-the-envelope math?
+3. **High-Level Design**: Did they draw a sound architecture?
+4. **Deep Dives**: Did they successfully answer drill-down questions about bottlenecks/trade-offs?
+
+**PENALTY**: If the candidate immediately started drawing the architecture without first asking clarifying questions to gather requirements and scale, their maximum possible score is a 5/10, regardless of how good the drawing is.
+
 You MUST output a valid JSON object matching the following structure exactly. Do NOT wrap the JSON in Markdown (like \`\`\`json). Just return the raw JSON object.
 
 {
@@ -135,9 +145,10 @@ You MUST output a valid JSON object matching the following structure exactly. Do
   ],
   "weaknesses": [
     "Forgot to discuss caching strategies for reads.",
-    "Did not specify data retention policies."
+    "Skipped requirement gathering and started drawing immediately."
   ],
-  "feedback": "Overall, a very strong performance. The candidate demonstrated a deep understanding of distributed systems and effectively used whiteboarding to communicate their ideas. To reach L6 (Staff), they should proactively discuss edge cases and scaling limits."
+  "recommendation": "The candidate should focus heavily on defining constraints (DAU, RPS) before jumping into solutions.",
+  "feedback": "Overall, a very strong performance, but lacked initial structuring..."
 }`
 
     let completion

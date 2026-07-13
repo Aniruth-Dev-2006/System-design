@@ -166,6 +166,13 @@ export default function ReportDetails({ params }) {
             </ul>
           </div>
         </div>
+
+        {report.recommendation && (
+          <div style={{ marginTop: '24px', padding: '16px', background: '#f8fafc', borderLeft: '4px solid #3b82f6', borderRadius: '4px' }}>
+            <h4 style={{ margin: '0 0 8px 0', color: '#1e40af', fontSize: '15px' }}>Recommendation</h4>
+            <p style={{ margin: 0, fontSize: '14px', color: '#334155', lineHeight: 1.6 }}>{report.recommendation}</p>
+          </div>
+        )}
       </div>
 
       <div className={styles.card}>
