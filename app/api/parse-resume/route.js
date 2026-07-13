@@ -4,6 +4,8 @@ import { Groq } from 'groq-sdk'
 import fs from 'fs'
 import path from 'path'
 
+let currentKeyIndex = 0;
+
 export async function POST(req) {
   try {
     const formData = await req.formData()
@@ -28,8 +30,19 @@ export async function POST(req) {
     }
 
     // Call Groq to determine candidate level
-    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY_1 })
-    
+    const keys = [
+      process.env.GROQ_API_KEY_1,
+      process.env.GROQ_API_KEY_2,
+      process.env.GROQ_API_KEY_3,
+      process.env.GROQ_API_KEY_4,
+      process.env.GROQ_API_KEY_5,
+      process.env.GROQ_API_KEY_6
+    ].filter(Boolean)
+
+    if (keys.length === 0) {
+      return NextResponse.json({ error: 'No API keys configured.' }, { status: 500 })
+    }
+
     const prompt = `
       You are an expert technical recruiter evaluating a Software Engineering candidate's resume.
       Based on the following resume text, classify the candidate's seniority level into exactly one of three categories:
@@ -43,14 +56,34 @@ export async function POST(req) {
       ${resumeText.substring(0, 3000)} // Limit text to avoid token limits
     `
 
-    const completion = await groq.chat.completions.create({
-      messages: [{ role: 'user', content: prompt }],
-      model: 'llama-3.3-70b-versatile',
-      temperature: 0.1,
-      max_tokens: 10
-    })
+    let completion
+    let level = 'medium'
+    let lastError = null
 
-    let level = completion.choices[0]?.message?.content?.trim().toLowerCase() || 'medium'
+    for (let attempts = 0; attempts < keys.length; attempts++) {
+      const activeKey = keys[currentKeyIndex % keys.length]
+      currentKeyIndex = (currentKeyIndex + 1) % keys.length
+      
+      try {
+        const groq = new Groq({ apiKey: activeKey })
+        completion = await groq.chat.completions.create({
+          messages: [{ role: 'user', content: prompt }],
+          model: 'llama-3.3-70b-versatile',
+          temperature: 0.1,
+          max_tokens: 10
+        })
+        level = completion.choices[0]?.message?.content?.trim().toLowerCase() || 'medium'
+        lastError = null
+        break
+      } catch (err) {
+        console.warn(`Groq key index ${(currentKeyIndex === 0 ? keys.length : currentKeyIndex) - 1} failed:`, err.message)
+        lastError = err
+      }
+    }
+
+    if (lastError) {
+      throw lastError
+    }
     
     // Fallback if the model outputs something weird
     if (!['easy', 'medium', 'hard'].includes(level)) {
