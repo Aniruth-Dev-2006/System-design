@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useEffect } from 'react'
+import ReactMarkdown from 'react-markdown'
 import InteractiveOrb from './InteractiveOrb'
 import styles from './Sidebar.module.css'
 
@@ -36,8 +37,8 @@ export default function Sidebar({ transcript, isSpeaking, onUserMessage, onEndIn
                 </>
               )}
             </div>
-            <div className={`${styles.messageBubble} ${styles[msg.role]}`}>
-              {msg.text}
+            <div className={`${styles.message} ${styles[msg.role]}`}>
+              <ReactMarkdown>{msg.text}</ReactMarkdown>
             </div>
           </div>
         ))}
