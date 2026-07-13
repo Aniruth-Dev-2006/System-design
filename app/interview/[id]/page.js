@@ -283,7 +283,7 @@ export default function InterviewSessionPage({ params }) {
       {!started && walkthroughStep === 2 && (
         <div className={styles.fullPageOverlay}>
           <div className={styles.startScreenContent} style={{ background: '#ffffff', padding: '40px', borderRadius: '12px', boxShadow: '0 4px 24px rgba(0,0,0,0.1)', color: '#111827', width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div className={styles.startOrbWrapper} style={{ marginBottom: '24px', width: '120px', height: '120px' }}>
+            <div className={styles.startOrbWrapper} style={{ marginBottom: '24px', width: '180px', height: '180px' }}>
               <video
                 autoPlay
                 loop
